@@ -32,7 +32,7 @@ namespace Scp_244_IsIllegal
 
         public void DetachEvent()
         {
-            Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWhaitForPlayer;
+            Exiled.Events.Handlers.Server.RoundStarted -= OnWhaitForPlayer;
         }
 
         public void RemoveScp244(Locker locker)
