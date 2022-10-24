@@ -5,10 +5,10 @@ namespace Scp_244_IsIllegal
 {
     public class Plugin : Plugin<Config>
     {
-        public override string Prefix => "Scp 244 is illegal";
+        public override string Prefix => "Scp244_IsIllegal";
         public override string Name => "Scp 244 is illegal";
         public override string Author => "VT";
-        public override Version Version { get; } = new Version(2, 0, 0);
+        public override Version Version { get; } = new Version(1, 0, 0);
 
 
         public EventHandler EventHandler { get; private set; }
