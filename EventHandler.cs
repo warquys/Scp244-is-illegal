@@ -48,15 +48,15 @@ namespace Scp_244_IsIllegal
                 index = chamber.AcceptableItems.IndexOf(ItemType.SCP244b);
                 if (index != -1)
                     chamber.AcceptableItems[index] = _config.ReplaceScp244b_locker;
+            }
 
-                foreach (var loot in locker.Loot)
-                {
-                    if (loot.TargetItem == ItemType.SCP244a)
-                        loot.TargetItem = _config.ReplaceScp244a_locker;
-                    
-                    if (loot.TargetItem == ItemType.SCP244b)
-                        loot.TargetItem = _config.ReplaceScp244b_locker;
-                }
+            foreach (var loot in locker.Loot)
+            {
+                if (loot.TargetItem == ItemType.SCP244a)
+                    loot.TargetItem = _config.ReplaceScp244a_locker;
+
+                if (loot.TargetItem == ItemType.SCP244b)
+                    loot.TargetItem = _config.ReplaceScp244b_locker;
             }
         }
 
