@@ -4,6 +4,7 @@ using Exiled.Events.EventArgs;
 using MapGeneration.Distributors;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Scp_244_IsIllegal
 {
@@ -27,14 +28,15 @@ namespace Scp_244_IsIllegal
         #region Methods
         public void AttachEvent()
         {
-            Exiled.Events.Handlers.Server.RoundStarted += OnWhaitForPlayer;
+            Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
         }
 
         public void DetachEvent()
         {
-            Exiled.Events.Handlers.Server.RoundStarted -= OnWhaitForPlayer;
+            Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         }
 
+/* Remove bc the lockers have already spawned the items        
         public void RemoveScp244(Locker locker)
         {
             foreach (var chamber in locker.Chambers)
@@ -58,53 +60,63 @@ namespace Scp_244_IsIllegal
                 if (loot.TargetItem == ItemType.SCP244b)
                     loot.TargetItem = _config.ReplaceScp244b_locker;
             }
+        }*/
+
+        private void SpawnItem(Vector3 position, Quaternion rotation, ItemType itemType)
+        {
+            if (itemType == ItemType.None) return;
+
+            var item = Item.Create(itemType);
+            item.Spawn(position, rotation);
         }
 
-        private void DoorSetOpen(ICollection<Door> doors, bool open = true)
-        {
-            foreach (var door in doors)
-                door.IsOpen = open;
-        }
-
-        private void RemoveScp244(ICollection<Pickup> pickups)
-        {
-            foreach (var pickup in pickups)
-            {
-                if (pickup.Type == ItemType.SCP244a)
-                {
-                    if (_config.ReplaceScp244a_floor != ItemType.None)
-                    {
-                        var item = Item.Create(_config.ReplaceScp244a_floor);
-                        item.Spawn(pickup.Position, pickup.Rotation);
-                    }
-                    pickup.Destroy();
-                }
-                if (pickup.Type == ItemType.SCP244b)
-                {
-                    if (_config.ReplaceScp244b_floor != ItemType.None)
-                    {
-                        var item = Item.Create(_config.ReplaceScp244b_floor);
-                        item.Spawn(pickup.Position, pickup.Rotation);
-                    }
-                    pickup.Destroy();
-                }
-            }
-            
-        }
         #endregion
 
         #region Events
-        private void OnWhaitForPlayer()
+        private unsafe void OnRoundStarted()
         {
-            var doors = Room.List.SelectMany(p => p.Doors).Where(p => !p.IsOpen).ToList();
-            DoorSetOpen(doors);
-            RemoveScp244(Map.Pickups);
-            DoorSetOpen(doors, false);
+            const float maxDistancePickupSpawnpoint = 1;
 
+            var pickups = Map.Pickups;
+            var chambers = Object.FindObjectsOfType<LockerChamber>();
+
+            foreach (var pickup in pickups)
+            {
+                if (pickup is not { Type: ItemType.SCP244a or ItemType.SCP244b }) continue;
+
+                var position = pickup.Position;
+                var rotation = pickup.Rotation;
+
+#if DEBUG
+                var distance = chambers.Min(p => Vector3.Distance(p._spawnpoint.position, position));
+                Log.Debug($"min {distance}");
+#endif
+
+                var inLocker = chambers.Any(p => Vector3.Distance(p._spawnpoint.position, position) < maxDistancePickupSpawnpoint);
+                pickup.Destroy();
+
+                switch (pickup.Type)
+                {
+                    case ItemType.SCP244a when inLocker:
+                        SpawnItem(position, rotation, _config.ReplaceScp244a_locker);
+                        break;
+                    case ItemType.SCP244a:
+                        SpawnItem(position, rotation, _config.ReplaceScp244a_floor);
+                        break;
+                    case ItemType.SCP244b when inLocker:
+                        SpawnItem(position, rotation, _config.ReplaceScp244b_locker);
+                        break;
+                    case ItemType.SCP244b:
+                        SpawnItem(position, rotation, _config.ReplaceScp244b_floor);
+                        break;
+                }
+            }
+
+            /* Remove bc the lockers have already spawned the items
             foreach (var locker in Map.Lockers)
-                RemoveScp244(locker);
+                RemoveScp244(locker);*/
         }
 
-        #endregion
+#endregion
     }
 }
